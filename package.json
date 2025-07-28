@@ -1,0 +1,41 @@
+{
+  "name": "app-authentication",
+  "version": "1.0.0",
+  "description": "projeto com autentificação e autorização de rotas",
+  "homepage": "https://github.com/Tuviccfp/authentication-authorization#readme",
+  "bugs": {
+    "url": "https://github.com/Tuviccfp/authentication-authorization/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tuviccfp/authentication-authorization.git"
+  },
+  "license": "ISC",
+  "author": "Victor Cordeiro Fraguas Pires",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev --inspect --transpile-only --ignore-watch node_modules src/index.ts"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongodb": "^6.18.0",
+    "mongoose": "^8.16.4",
+    "pino": "^9.7.0",
+    "pino-pretty": "^13.0.0"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/dotenv": "^8.2.3",
+    "@types/express": "^5.0.3",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongodb": "^4.0.7",
+    "@types/mongoose": "^5.11.97",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
+  }
+}
