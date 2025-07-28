@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import {authenticated, validRole} from "../../middleware";
-import {Types} from "mongoose";
+import {Document, Types} from "mongoose";
 import log from "../../logger";
 import {Product} from "../../models/product";
 
@@ -34,6 +34,25 @@ router.post("/register", [authenticated, validRole], async (req: Request, res: R
         });
     } catch (e) {
         log.info({e: e}, "Erro ao cadastrar produto");
+    }
+});
+
+router.get("/show-all", async (req: Request, res: Response) => {
+    try {
+        const result = await Product.findOne({});
+        if(!result) return res.status(404).json({
+            message: "Ainda não existe nada registrado"
+        });
+
+        log.info({result: result}, "Resultado do produto");
+        return res.status(200).json({
+            products: result,
+        });
+    } catch (e) {
+        log.info({e: e}, "Erro ao buscar produto");
+        return res.status(500).json({
+            message: "Erro ao buscar produto"
+        });
     }
 });
 
