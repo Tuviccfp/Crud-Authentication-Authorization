@@ -19,18 +19,13 @@ export function jwtSign(payload: { _id: Types.ObjectId, role: string | undefined
 }
 
 export function authenticated(req: Request, res: Response, next: NextFunction) {
-        const authHeader: string | undefined = req.headers.authorization;
-        if(!authHeader?.startsWith("Bearer ") || !authHeader) {
-            log.info({token: authHeader}, "Invalid token, acess negative");
-            return res.status(401).send("Invalid token, acess negative")
-        }
-        const token: string = authHeader.split(" ")[1];
-    try {
-        const decoded: string | JwtPayload = jwt.verify(token, process.env.JWT_SECRET as string) as { _id: string, role: string };
-        if(!decoded) {
+        const token: string = req.cookies.authToken;
+        if(!token) {
             log.info({token: token}, "Invalid token");
             return res.status(401).send("Invalid token");
         }
+    try {
+        const decoded: string | JwtPayload = jwt.verify(token, process.env.JWT_SECRET as string) as { _id: string, role: string };
         log.info({token: token}, "Token valido");
         req.user = { _id: decoded._id, role: decoded.role }
         next();
