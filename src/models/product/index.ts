@@ -1,5 +1,15 @@
 import mongoose, {Schema, Document, Types} from "mongoose";
 
+export interface ProductTypes {
+    name: string;
+    price: number;
+    description: string;
+    image: string;
+    updatedAt?: Date;
+    createdAt?: Date;
+    userCreate?: Types.ObjectId;
+}
+
 export interface Product extends Document {
     name: string;
     price: number;
