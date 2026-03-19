@@ -1,7 +1,8 @@
 import {Request, Response} from "express";
-import {User, UserTypes} from "../models/user";
+import {User, userSchemaValidation, UserTypes} from "../models/user";
 import log from "../logger";
 import {jwtSign} from "../middleware";
+import {productSchemaValidation} from "../models/product";
 
 export const helloMessage = async (req: Request, res: Response) => {
     try {
@@ -12,10 +13,13 @@ export const helloMessage = async (req: Request, res: Response) => {
 }
 
 export const register = async (req: Request, res: Response) => {
+
     try {
         const data: UserTypes = req.body;
-        const {name, password, email} = data;
-        log.info({ email }, "Tentativa de novo registro de e-mail");
+        const userValidated = userSchemaValidation.parse(data);
+        const {name, password, email} = userValidated;
+
+        log.info("Tentativa de novo registro de e-mail");
 
         if(!name || !password || !email ) {
             log.warn({ email }, "Tentativa de novo registro falhou: campos obrigatorios em branco!");
@@ -70,7 +74,7 @@ export const enter = async (req: Request, res: Response) => {
             httpOnly: true,
             maxAge: 1000 * 60 * 60 * 24,
             sameSite: "strict",
-            secure: process.env.NODE_ENV === "development",
+            secure: process.env.NODE_ENV === "production",
         });
         log.info("Um solicitacao login foi realizada com sucesso");
         return res.status(200).json({
