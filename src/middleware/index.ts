@@ -69,8 +69,6 @@ export function middlewareError(err: Error, req: Request, res: Response, next: N
         return res.status(400).json({
             message: "Erro ao validar dados",
             errors: err.issues.map((e) => e.message),
-            // errors: err.issues.map(e => ({field: e.path.join("."), message: e.message}))
-            //Testar no console.log a saida de ambos esses errors.
         });
     }
 
