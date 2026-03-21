@@ -2,7 +2,7 @@ import log from "../logger";
 import { z } from "zod";
 import {Types} from "mongoose";
 import {NextFunction, Request, Response} from "express";
-import {User} from "../models/user";
+import {User, userSchemaValidation} from "../models/user";
 import {ApiError} from "../utils/ApiError";
 
 // const 
@@ -21,7 +21,7 @@ export const findUserById = async (req: Request, res: Response, next: NextFuncti
         const {id} = req.params;
         if(!id) throw new ApiError(400, "Não foi encontrado nenhum id para a busca");
 
-        const result = await User.findById({_id: id});
+        const result = await User.findById({_id: id}).select("-password");
 
         log.info("Requisição efetuada com sucesso, id encontrado");
         return res.status(200).json({
@@ -33,27 +33,34 @@ export const findUserById = async (req: Request, res: Response, next: NextFuncti
     }
 }
 
-export const deleteById = async (req: Request, res: Response, next: NextFunction) => {
+export const deleteUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
-
         const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
 
         const {id} = req.params;
-        if(!id) throw new ApiError(400, "Não foi encontrado nenhum id para a busca")
+
+        if(!id) throw new ApiError(400, "Não foi encontrado nada, impossível deletar")
 
         await User.findByIdAndDelete({ _id: id });
 
         log.info({userId: user?._id}, "Usuário deletado com sucesso");
+        return res.status(200).json({message: "Usuário deletado com sucesso"});
     } catch (e) {
         next(e);
     }
 }
 
-export const updatedById = async (req: Request, res: Response, next: NextFunction) => {
+export const userUpdatedById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
+        const {id} = req.params;
+        const result = await User.findById({_id: id}).select("-password");
+        if(!id || !result) throw new ApiError(400, "Nada foi encontrado, impossível atualizar");
 
-        // if(!id) throw new ApiError(404)
+        const validationData = userSchemaValidation.parse(req.body);
+        await User.findByIdAndUpdate(id, { ...validationData }, {new: true});
+
+        return res.status(200).json({message: "Usuário atualizado com sucesso"});
     }
     catch (e) {
         next(e);
