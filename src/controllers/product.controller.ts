@@ -4,19 +4,19 @@ import log from "../logger";
 import {Types} from "mongoose";
 import { productSchemaValidation} from "../models/product";
 import {ApiError} from "../utils/ApiError";
-import {ZodError} from "zod";
 
 export const newProduct = async (req: Request, res: Response, next: NextFunction) => {
     const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
     try {
         const validatedProduct = productSchemaValidation.parse(req.body);
+
         await Product.create({
             ...validatedProduct,
             userCreate: user?._id,
-        })
+        });
 
         log.info({name: validatedProduct.name, userCreate: user?._id}, "Produto cadastrado com sucesso!");
-        return res.status(200).json({
+        return res.status(201).json({
             message: "Produto cadastrado com sucesso!"
         });
     } catch (e) {
@@ -113,13 +113,7 @@ export const updatedById = async (req: Request, res: Response, next: NextFunctio
 
         const validationData = productSchemaValidation.parse(req.body);
 
-        const product = new Product({
-            ...validationData,
-            userCreate: user?._id,
-            updatedAt: new Date(),
-        })
-
-        await Product.findByIdAndUpdate(id, product, { new: true });
+        await Product.findByIdAndUpdate(id, { ...validationData, userCreate: user?._id }, { new: true });
 
         log.info({user: user?._id},"Produto atualizado com sucesso");
         return res.status(200).json({
