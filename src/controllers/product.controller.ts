@@ -2,124 +2,124 @@ import {NextFunction, Request, Response} from "express";
 import {Product} from "../models/product";
 import log from "../logger";
 import {Types} from "mongoose";
-import { productSchemaValidation} from "../models/product";
+import { productSchemaValidation } from "@projeto/shared/schemas/product";
 import {ApiError} from "../utils/ApiError";
+import {productService} from "../services/productService";
 
-export const newProduct = async (req: Request, res: Response, next: NextFunction) => {
-    const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
-    try {
-        const validatedProduct = productSchemaValidation.parse(req.body);
 
-        await Product.create({
-            ...validatedProduct,
-            userCreate: user?._id,
-        });
+export const productController = {
+    async newProduct(req: Request, res: Response, next: NextFunction) {
+        const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
+        try {
+            const validatedProduct = productSchemaValidation.parse(req.body);
+            await productService.createProduct(validatedProduct, user?._id);
 
-        log.info({name: validatedProduct.name, userCreate: user?._id}, "Produto cadastrado com sucesso!");
-        return res.status(201).json({
-            message: "Produto cadastrado com sucesso!"
-        });
-    } catch (e) {
-        next(e);
-    }
-}
-
-export const getProducts = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const result = await Product.find();
-         
-        if(!result) {
-            log.warn("Nenhuma lista de produtos encontrados")
-            throw new ApiError(404, "Nenhuma lista de produtos encontrados");
+            log.info({name: validatedProduct.name, userCreate: user?._id}, "Produto cadastrado com sucesso!");
+            return res.status(201).json({
+                message: "Produto cadastrado com sucesso!"
+            });
+        } catch (e) {
+            next(e);
         }
+    },
 
-        log.info("Lista de produtos encontrados");
-        return res.status(200).json({
-            message: "Lista de produtos encontrados",
-            result: result
-        });
-    } catch (e) {
-        next(e);
-    }
-}
-export const getProductsReducer = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-       const result = await Product.find({}).select("_id name price description image");
-       if(!result) {
-           log.warn("Nenhuma lista de produtos encontrados")
-           throw new ApiError(404, "Nenhuma lista de produtos encontrados");
-       }
-       log.info("Lista de produtos encontrados");
-       return res.status(200).json({
-           message: "Lista de produtos encontrados",
-           result: result
-       });
-    }
-    catch (e) {
-        next(e);
-    }
-}
+    async getProductsByStatusAtivo(req: Request, res: Response, next: NextFunction) {
+    //Essa função abaixo vai sair
+        try {
+            const result = await Product.find({status: "ativo"});
 
-export const getProductById = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const {id} = req.params;
-        if(!id) {
-            log.warn("Não foi possível realizar uma busca com o id capturado do parâmetro");
-            return res.status(404).json({
-                message: "Não é possível localizar nada com esse id"
+            if(!result) {
+                log.warn("Nenhuma lista de produtos encontrados")
+                throw new ApiError(404, "Nenhuma lista de produtos encontrados");
+            }
+
+            log.info("Lista de produtos encontrados");
+            return res.status(200).json({
+                message: "Lista de produtos encontrados",
+                result: result
+            });
+        } catch (e) {
+            next(e);
+        }
+    },
+
+    async getProductsReducer(req: Request, res: Response, next: NextFunction) {
+        try {
+            const {name, status} = req.query;
+            const result = await productService.getProductsByQuery(status as string, name as string);
+            log.info("Lista de produtos encontrados");
+            return res.status(200).json({
+                message: "Lista de produtos encontrados",
+                result: result
             });
         }
-        const result = await Product.findById({_id: id});
-        log.info("Produto encontrado com sucesso");
-        return res.status(200).json({
-            message: "Produto encontrado",
-            result: result
-        });
-    } catch (e) {
-        next(e);
-    }
-}
+        catch (e) {
+            next(e);
+        }
+    },
 
-export const deleteById = async (req: Request, res: Response, next: NextFunction) => {
-    try {
+    //Essa função abaixo vai sair
+    async getProductsByStatusInativo(req: Request, res: Response, next: NextFunction) {
+        try {
+            const result = await Product.find({status: "inativo"}).sort({updatedById: -1});
+            if(!result) {
+                log.warn("Nenhuma lista de produtos encontrados")
+                throw new ApiError(404, "Nenhuma lista de produtos encontrados");
+            }
+            log.info("Lista de produtos encontrados");
+            return res.status(200).json({
+                message: "Lista de produtos encontrados",
+                result: result
+            });
+        } catch (e) {
+            next(e);
+        }
+    },
+
+    async getProductById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const {id} = req.params;
+            await productService.getProductById(id);
+            const result = await Product.findById({_id: id});
+            log.info("Produto encontrado com sucesso");
+            return res.status(200).json({
+                message: "Produto encontrado",
+                result: result
+            });
+        } catch (e) {
+            next(e);
+        }
+    },
+
+    async deleteById(req: Request, res: Response, next: NextFunction) {
+        try {
+            const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
+            const {id} = req.params;
+            await productService.deleteProductById(id);
+
+            log.info({user: user?._id}, "Produto deletado com sucesso");
+            return res.status(200).json({
+                message: "Produto deletado com sucesso"
+            });
+        } catch (e) {
+            next(e);
+        }
+    },
+
+    async updatedById(req: Request, res: Response, next: NextFunction) {
         const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
-        const {id} = req.params;
-        //Mudar a lógica de deletar para alterar o campo de status para inativo, deletar o produto será responsabilidade do administrador
-        if(!id) {
-            log.warn("Não foi possível realizar uma busca pelo id");
-            throw new ApiError(404, "Erro ao encontrar produto");
+        try {
+            const {id} = req.params;
+            const validationData = productSchemaValidation.parse(req.body);
+
+            await productService.updateProductById(id, validationData, user?._id);
+
+            log.info({user: user?._id},"Produto atualizado com sucesso");
+            return res.status(200).json({
+                message: "Produto atualizado com sucesso"
+            })
+        } catch (e) {
+            next(e);
         }
-
-        await Product.findByIdAndDelete({_id: id});
-        log.info({user: user?._id}, "Produto deletado com sucesso");
-        return res.status(200).json({
-            message: "Produto deletado com sucesso"
-        });
-    } catch (e) {
-        next(e);
-    }
-}
-
-export const updatedById = async (req: Request, res: Response, next: NextFunction) => {
-    const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
-    try {
-        const {id} = req.params;
-        const result = await Product.findById({_id: id});
-
-        if(!id || !result) {
-            log.warn("Erro ao localizar o produto e efetuar a operação solicitada")
-            throw new ApiError(404, "Não foi possível identificar o id do produto, operação não realizada");
-        }
-
-        const validationData = productSchemaValidation.parse(req.body);
-
-        await Product.findByIdAndUpdate(id, { ...validationData, userCreate: user?._id }, { new: true });
-
-        log.info({user: user?._id},"Produto atualizado com sucesso");
-        return res.status(200).json({
-            message: "Produto atualizado com sucesso"
-        })
-    } catch (e) {
-        next(e);
     }
 }
