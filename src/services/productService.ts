@@ -19,7 +19,7 @@ export const productService = {
         user: string | Types.ObjectId | undefined): Promise<ProductDocument> {
             return await Product.create({
                 ...(product as Record<string, any>),
-                userCreate: user,
+                userCreate: "69dbf59a6895b307643a686d",
             });
     },
 

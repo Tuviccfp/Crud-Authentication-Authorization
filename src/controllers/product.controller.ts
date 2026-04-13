@@ -79,7 +79,7 @@ export const productController = {
     async getProductById(req: Request, res: Response, next: NextFunction) {
         try {
             const {id} = req.params;
-            await productService.getProductById(id);
+            await productService.getProductById(id.toString());
             const result = await Product.findById({_id: id});
             log.info("Produto encontrado com sucesso");
             return res.status(200).json({
@@ -95,7 +95,7 @@ export const productController = {
         try {
             const user: {_id: string | Types.ObjectId, role: string} | undefined = req.user;
             const {id} = req.params;
-            await productService.deleteProductById(id);
+            await productService.deleteProductById(id.toString());
 
             log.info({user: user?._id}, "Produto deletado com sucesso");
             return res.status(200).json({
@@ -112,7 +112,7 @@ export const productController = {
             const {id} = req.params;
             const validationData = productSchemaValidation.parse(req.body);
 
-            await productService.updateProductById(id, validationData, user?._id);
+            await productService.updateProductById(id.toString(), validationData, user?._id);
 
             log.info({user: user?._id},"Produto atualizado com sucesso");
             return res.status(200).json({
