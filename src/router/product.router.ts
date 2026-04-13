@@ -14,6 +14,6 @@ router.get("/list-products-inativo", authenticated, restrictAdmin, productContro
 router.get("/list-products", productController.getProductsByStatusAtivo);
 router.get("/list/:id", productController.getProductById);
 router.delete("/delete/:id", authenticated, restrictAdmin, productController.deleteById);
-router.put("/update/:id", authenticated, restrictAdmin, restrictEmployeer, productController.updatedById);
+router.put("/update/:id", authenticated, restrictAdmin || restrictEmployeer, productController.updatedById);
 
 export default router;
