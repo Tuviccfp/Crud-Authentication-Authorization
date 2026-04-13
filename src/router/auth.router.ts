@@ -1,12 +1,15 @@
 import { Router } from "express";
-import {enter, helloMessage, register} from "../controllers/auth.controller";
+import {authController, enter, helloMessage, register} from "../controllers/auth.controller";
+import {authenticated} from "../middleware";
 
 const router = Router();
 
-router.get("/teste", helloMessage);
+router.get("/teste", authController.helloMessage);
 
-router.post("/register", register);
+router.post("/register", authController.register);
 
-router.post("/enter", enter);
+router.post("/enter", authController.enter);
+
+router.get("/logout/", authenticated, authController.logout);
 
 export default router;
