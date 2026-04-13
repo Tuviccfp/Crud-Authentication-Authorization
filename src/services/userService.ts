@@ -1,6 +1,6 @@
 import { User } from "../models/user";
 import {ApiError} from "../utils/ApiError";
-import {cookieToken} from "../middleware";
+import { Response } from "express"
 import {ObjectId} from "mongodb";
 import log from "../logger";
 import {Product} from "../models/product";
@@ -41,6 +41,13 @@ export const userService = {
             throw new ApiError(404, "Não existe produto cadastrado no seu usuário");
         }
         return resultProducts;
+    },
+
+    async logout(res: Response) {
+        return res.cookie("authToken", "", {
+            httpOnly: true,
+            expires: new Date(0),
+        })
     }
 
 }
