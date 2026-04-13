@@ -77,6 +77,11 @@ export function middlewareError(err: Error, req: Request, res: Response, next: N
         return res.status(err.statusCode).json({ message: err.message });
     }
 
+    if (err.name === 'CastError') {
+        log.warn({e: err}, "ID em formato inválido");
+        return res.status(400).json({ message: "O ID fornecido possui um formato inválido" });
+    }
+
     return res.status(500).json({
         message: "Erro interno no servidor",
     })
