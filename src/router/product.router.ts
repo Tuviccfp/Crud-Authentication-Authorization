@@ -9,7 +9,7 @@ const router = Router();
 import {productController} from "../controllers/product.controller";
 
 router.post("/create", authenticated, restrictAdmin, productController.newProduct);
-router.get("/list", productController.getProductsReducer);
+router.get("/list", authenticated, productController.getProductsReducer);
 router.get("/list-products-inativo", authenticated, restrictAdmin, productController.getProductsByStatusInativo);
 router.get("/list-products", productController.getProductsByStatusAtivo);
 router.get("/list/:id", productController.getProductById);
