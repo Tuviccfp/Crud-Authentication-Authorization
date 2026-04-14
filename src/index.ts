@@ -8,9 +8,10 @@ import productRouter from "./router/product.router";
 import userRouter from "./router/user.router";
 import log from "./logger";
 import {middlewareError} from "./middleware";
-
+import Redis from "ioredis";
 const app: Express = express();
 
+export const redis = new Redis();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
