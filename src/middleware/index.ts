@@ -27,10 +27,9 @@ export async function authenticated(req: Request, res: Response, next: NextFunct
     let token: string | undefined
     const headerAuth = req.headers.authorization;
 
-    if(token && headerAuth?.startsWith("Bearer ")) {
+    if(headerAuth && headerAuth.startsWith("Bearer ")) {
         token = headerAuth.split(" ")[1];
     }
-
     if(!token && req.cookies) {
         token = req.cookies.authToken;
     }
@@ -38,6 +37,7 @@ export async function authenticated(req: Request, res: Response, next: NextFunct
         log.info({token: token}, "Invalid token");
         return res.status(401).send("Invalid token");
     }
+
     const isBlackListed = await redis.get(`bl_$${token}`);
     if(isBlackListed) {
         return res.status(401).send("Token Revogado");
