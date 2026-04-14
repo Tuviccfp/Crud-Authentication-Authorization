@@ -59,14 +59,6 @@ export const userService = {
         const decoded = jwt.decode(finalToken as string) as { exp: number };
         const now = Math.floor(Date.now() / 1000);
         const ttl = decoded.exp - now;
-        const testeReturn = {
-            setTokenHeader: setTokenHeader,
-            setTokenCookie: setTokenCookie,
-            finalToken: finalToken,
-            now: now,
-            ttl: ttl
-        }
-        console.log(testeReturn)
         if(ttl > 0) {
             await redis.setex(`bl_$${finalToken}`, ttl, "true");
         }
