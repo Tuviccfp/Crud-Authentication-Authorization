@@ -1,10 +1,13 @@
 import { User } from "../models/user";
 import {ApiError} from "../utils/ApiError";
-import { Response } from "express"
+import { Response, Request } from "express"
 import {ObjectId} from "mongodb";
 import log from "../logger";
 import {Product} from "../models/product";
 import { UserInterface } from "@projeto/shared/interfaces/user";
+import jwt from "jsonwebtoken";
+import {redis} from "../index";
+
 export const userService = {
 
     async registerUser(user: UserInterface) {
@@ -43,11 +46,29 @@ export const userService = {
         return resultProducts;
     },
 
-    async logout(res: Response) {
-        return res.cookie("authToken", "", {
-            httpOnly: true,
-            expires: new Date(0),
-        })
+    async logout(req: Request) {
+        let finalToken: string | undefined
+        const setTokenHeader = req.headers.authorization?.split(' ')[1];
+        const setTokenCookie = req.cookies.authToken;
+        if(setTokenHeader) {
+            finalToken = setTokenHeader
+        }
+        if(!finalToken && setTokenCookie) {
+            finalToken = setTokenCookie
+        }
+        const decoded = jwt.decode(finalToken as string) as { exp: number };
+        const now = Math.floor(Date.now() / 1000);
+        const ttl = decoded.exp - now;
+        const testeReturn = {
+            setTokenHeader: setTokenHeader,
+            setTokenCookie: setTokenCookie,
+            finalToken: finalToken,
+            now: now,
+            ttl: ttl
+        }
+        console.log(testeReturn)
+        if(ttl > 0) {
+            await redis.setex(`bl_$${finalToken}`, ttl, "true");
+        }
     }
-
 }

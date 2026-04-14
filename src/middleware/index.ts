@@ -4,6 +4,7 @@ import { Types } from 'mongoose'
 import log from "../logger";
 import {ZodError} from "zod";
 import {ApiError} from "../utils/ApiError";
+import {redis} from "../index";
 
 if(!process.env.JWT_SECRET) throw new Error(
     "Please, set the JWT_SECRET environment variable"
@@ -20,21 +21,27 @@ export function jwtSign(payload: JWTCustomPayload): string {
     return jwt.sign(payload, JWT_SECRET, {expiresIn: '1d'});
 }
 
-export function authenticated(req: Request, res: Response, next: NextFunction) {
-        let token: string | undefined
-        const headerAuth = req.headers.authorization;
 
-        if(headerAuth && headerAuth.startsWith("Bearer ")) {
-            token = headerAuth.split(" ")[1];
-        }
 
-        if(!token && req.cookies) {
-            token = req.cookies.authToken;
-        }
-        if(!token) {
-            log.info({token: token}, "Invalid token");
-            return res.status(401).send("Invalid token");
-        }
+export async function authenticated(req: Request, res: Response, next: NextFunction) {
+    let token: string | undefined
+    const headerAuth = req.headers.authorization;
+
+    if(token && headerAuth?.startsWith("Bearer ")) {
+        token = headerAuth.split(" ")[1];
+    }
+
+    if(!token && req.cookies) {
+        token = req.cookies.authToken;
+    }
+    if(!token) {
+        log.info({token: token}, "Invalid token");
+        return res.status(401).send("Invalid token");
+    }
+    const isBlackListed = await redis.get(`bl_$${token}`);
+    if(isBlackListed) {
+        return res.status(401).send("Token Revogado");
+    }
     try {
         const decoded: string | JwtPayload = jwt.verify(token, process.env.JWT_SECRET as string) as { _id: string, role: string };
 
